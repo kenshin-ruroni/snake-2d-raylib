@@ -12,7 +12,7 @@
 #include "raylib.h"
 #include "raymath.h"
 
-#define MAX_SEGMENT_POINTS 60
+#define MAX_SEGMENT_POINTS 100
 
 #define RAD_TO_DEG 180.0/3.14
 
@@ -34,30 +34,30 @@ public:
 
 	size_t segments_points_size = 0;
 
-	double base = 20,height = 20;
+	float base = 20,height = 20;
 
 	Vector2 collision_position;
 	
 	Vector2 last_position = {0,0};
 	Vector2 current_position = {0.0,0.0};
 
-	double segment_radius = POINT_RADIUS;
-	double half_segment_radius = 0.5 * POINT_RADIUS;
-	double points_distance_squared = (POINT_RADIUS)*(POINT_RADIUS);
+	float segment_radius = POINT_RADIUS;
+	float half_segment_radius = 0.5 * POINT_RADIUS;
+	float points_distance_squared = (POINT_RADIUS)*(POINT_RADIUS);
 
 	Vector2 speed = {1.0,0};
 
 	Vector2 direction = {1.0,0};
 	Vector2 perpendicular_direction = {0,1};
 
-	float r_width = 5,r_height  = 15;
+	float r_width = 10,r_height  = 10;
 
 	float half_r_width = r_width/2, half_r_height = r_height/2;
 
 	Vector2 t[3]; // head vertices
-
-	double angle = 0;
-	double d ,l;
+	Vector2 head_origin;
+	float angle = 0;
+	float d ,l;
 	bool collided = false;
 	size_t collision_index = -1;
 	Vector2 p;
@@ -73,7 +73,7 @@ public:
 	if ( segments.size() > MAX_SEGMENT_POINTS - 1){
 			segments.pop_back();
 	}
-	if ( Vector2LengthSqr(current_position - last_position) >= 5) //points_distance_squared)
+	if ( Vector2LengthSqr(current_position - last_position) >= 2.5) //points_distance_squared)
 	{
 		segments.push_front({last_position,std::atan2(speed.y,speed.x)*RAD2DEG});
 		last_position = current_position;
@@ -105,9 +105,11 @@ public:
 			DrawRectanglePro(r,{half_r_width,half_r_height},segments[i].angle,LIME);
 			p = segments[i].p;
 	}
-	t[0]={current_position.x+base*0.5*perpendicular_direction.x,current_position.y+base*0.5*perpendicular_direction.y};
-	t[1]={current_position.x-base*0.5*perpendicular_direction.x,current_position.y-base*0.5*perpendicular_direction.y};
-	t[2]={current_position.x+height*direction.x,current_position.y+height*direction.y};
+
+	head_origin = {current_position.x-direction.x*0.5,current_position.y-direction.y*0.5};
+	t[0]={head_origin.x+base*0.5*perpendicular_direction.x,head_origin.y+base*0.5*perpendicular_direction.y};
+	t[1]={head_origin.x-base*0.5*perpendicular_direction.x,head_origin.y-base*0.5*perpendicular_direction.y};
+	t[2]={head_origin.x+height*direction.x,head_origin.y+height*direction.y};
 
 	//DrawCircle(current_position.x,current_position.y, half_segment_radius, LIME);
 
