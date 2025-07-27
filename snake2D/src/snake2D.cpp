@@ -28,7 +28,7 @@ int main ()
 
     InitWindow(screenWidth, screenHeight, "SnAkE");
 
-    double speed = 1.0;
+    double speed = 1.0/2;
 
     double currentTime = GetTime();
     double previousTime = currentTime;

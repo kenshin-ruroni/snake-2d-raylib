@@ -54,7 +54,7 @@ public:
 
 	float half_r_width = r_width/2, half_r_height = r_height/2;
 
-	Vector2 t[3];
+	Vector2 t[3]; // head vertices
 
 	double angle = 0;
 	double d ,l;
@@ -100,7 +100,7 @@ public:
 
 	p = current_position;
 	for ( size_t i =0; i < segments.size()/*std::min(segments_points_size,segments.size())*/;i++){
-		r= {segments[i].p.x-half_r_width,segments[i].p.y-half_r_height,r_width,r_height};
+		r= {segments[i].p.x,segments[i].p.y,r_width,r_height};
 			//DrawLine(p.x, p.y,segments[i].p.x,segments[i].p.y, LIME);
 			DrawRectanglePro(r,{half_r_width,half_r_height},segments[i].angle,LIME);
 			p = segments[i].p;
