@@ -1,4 +1,7 @@
 #include <deque>
+#include <chrono>
+#include <thread>
+
 
 #include "raylib.h"
 
@@ -28,7 +31,7 @@ int main ()
 
     InitWindow(screenWidth, screenHeight, "SnAkE");
 
-    double speed = 1.0/2;
+    double speed = 1.;
 
     double currentTime = GetTime();
     double previousTime = currentTime;
@@ -36,8 +39,13 @@ int main ()
     double dx=1,dy=0;
     Camera2D camera = { 0 };
     camera.zoom = 1.0f;
-    Vector2 p; ;
-    the_snake.initializePosition(p = {GetScreenWidth()/2, GetScreenHeight()/2});
+
+    camera.target = the_snake.head_position;
+
+    camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
+
+    Vector2 p;
+    the_snake.initializePosition(p = {(float)GetScreenWidth()/2, (float)GetScreenHeight()/2});
 
     the_snake.speed = {speed,speed};
     int zoomMode = 0;   // 0-Mouse Wheel, 1-Mouse Move
@@ -45,8 +53,9 @@ int main ()
 
     SetTargetFPS(60);                   // Set our game to run at 60 frames-per-second
     //--------------------------------------------------------------------------------------
-    Vector2 direction = {1.,0};
+    Vector2 direction = {std::sqrt(2),std::sqrt(2)};
 
+    bool fast_turn_enabled = true;
     // Main game loop
     while (!WindowShouldClose())        // Detect window close button or ESC key
     {
@@ -55,21 +64,25 @@ int main ()
     	currentTime = GetTime();
     	deltaTime = 1; //currentTime - previousTime;
 
-    	if (IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_LEFT)){
-    		dangle += 0.0005;
+    	// the more we press a key the more the snake turns fast
+    	if (fast_turn_enabled && ( IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_LEFT) ) ){
+
+    		if( dangle > 0.5 )
+    		{
+    			dangle = 0;
+    			fast_turn_enabled = false;
+    		} else{
+    			dangle+= 0.0002;
+    		}
+
     	}else{
-    		dangle = 0;
+    		dangle = 0;fast_turn_enabled = true;
     	}
 
     	if (IsKeyDown(KEY_RIGHT)) the_snake.angle += 0.01 + dangle;
     	if (IsKeyDown(KEY_LEFT)) the_snake.angle -= 0.01 + dangle;
-    	if (IsKeyDown(KEY_UP)) dy = -1;
-    	if (IsKeyDown(KEY_DOWN)) dy = 1;
 
-    	//if (IsKeyDown(KEY_RIGHT)) dx = 1;
-    	//if (IsKeyDown(KEY_LEFT)) dx = -1;
-    	//if (IsKeyDown(KEY_UP)) dy = -1;
-    	//if (IsKeyDown(KEY_DOWN)) dy = 1;
+
 
     	direction = {std::cos(the_snake.angle),std::sin(the_snake.angle)};
     	the_snake.direction = direction;
@@ -100,14 +113,14 @@ int main ()
             if (wheel != 0)
             {
                 // Get the world point that is under the mouse
-                Vector2 mouseWorldPos = GetScreenToWorld2D(GetMousePosition(), camera);
+                //Vector2 mouseWorldPos = GetScreenToWorld2D(GetMousePosition(), camera);
 
                 // Set the offset to where the mouse is
-                camera.offset = GetMousePosition();
+                //camera.offset = GetMousePosition();
 
                 // Set the target to match, so that the camera maps the world space point
                 // under the cursor to the screen space point under the cursor at any zoom
-                camera.target = mouseWorldPos;
+                //camera.target = mouseWorldPos;
 
                 // Zoom increment
                 // Uses log scaling to provide consistent zoom speed
@@ -177,6 +190,9 @@ int main ()
             else DrawText("Mouse left button drag to move, mouse press and move to zoom", 20, 50, 20, DARKGRAY);
 
         EndDrawing();
+
+        //std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        camera.target = the_snake.head_position;
         //----------------------------------------------------------------------------------
     }
 
