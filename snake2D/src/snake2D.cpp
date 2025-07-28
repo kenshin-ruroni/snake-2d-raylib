@@ -31,7 +31,7 @@ int main ()
 
     InitWindow(screenWidth, screenHeight, "SnAkE");
 
-    double speed = 1.;
+    float speed = 1;
 
     double currentTime = GetTime();
     double previousTime = currentTime;
@@ -40,7 +40,7 @@ int main ()
     Camera2D camera = { 0 };
     camera.zoom = 1.0f;
 
-    camera.target = the_snake.head_position;
+    camera.target = the_snake.current_position;
 
     camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
 
@@ -141,7 +141,7 @@ int main ()
 
                 // Set the target to match, so that the camera maps the world space point
                 // under the cursor to the screen space point under the cursor at any zoom
-                camera.target = mouseWorldPos;
+                //camera.target = mouseWorldPos;
             }
             if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
             {
@@ -192,7 +192,7 @@ int main ()
         EndDrawing();
 
         //std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        camera.target = the_snake.head_position;
+        camera.target = the_snake.current_position;
         //----------------------------------------------------------------------------------
     }
 

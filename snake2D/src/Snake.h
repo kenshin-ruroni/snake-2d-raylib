@@ -41,11 +41,11 @@ public:
 	Vector2 last_position = {0,0};
 	Vector2 current_position = {0.0,0.0};
 
-	float reptation_frequency = 1;
-	float reptation_amplitude = 2;
+	float reptation_frequency = 0.5;
+	float reptation_amplitude = 20;
 	float omega = 2.0 * M_PIf * reptation_frequency;
-	
-	
+	float body_segment_reptation_motion_angle; // extra reptation motion for body segment
+	float body_segment_reptation_motion_angle_max_amplitude = 15; // in degrees
 	float segment_radius = POINT_RADIUS;
 	float half_segment_radius = 0.5 * POINT_RADIUS;
 	float points_distance_squared = (POINT_RADIUS)*(POINT_RADIUS);
@@ -55,7 +55,7 @@ public:
 	Vector2 direction = {1.0,0};
 	Vector2 perpendicular_direction = {0,1};
 
-	float r_width = 2.5,r_height  = 20;
+	float r_width = 5,r_height  = 20;
 
 	float half_r_width = r_width/2, half_r_height = r_height/2;
 
@@ -72,7 +72,7 @@ public:
 
 	float direction_angle_in_radians,reptation_angle_in_radians;
 
-	float current_phase;
+	float current_phase , current_amplitude;
 	Vector2 reptation_direction, oscillation_direction;
 	Vector2 perpendicular_reptation_direction = {0,1};
 
@@ -93,9 +93,10 @@ public:
 
 
 
-		current_phase = std::sin(omega*GetTime()) * reptation_amplitude;
-		oscillation_direction = {current_phase*perpendicular_direction.x,
-							   current_phase*perpendicular_direction.y};
+		current_amplitude = (current_phase = std::sin(omega*GetTime())) * reptation_amplitude;
+
+		oscillation_direction = {current_amplitude*perpendicular_direction.x,
+				current_amplitude*perpendicular_direction.y};
 
 
 		head_position = {last_position.x +  oscillation_direction.x,last_position.y+ oscillation_direction.y};
@@ -139,7 +140,8 @@ public:
 	for ( size_t i =0; i < body_segments.size()/*std::min(segments_points_size,segments.size())*/;i++){
 		r= {body_segments[i].origin.x,body_segments[i].origin.y,r_width,r_height};
 			//DrawLine(p.x, p.y,segments[i].p.x,segments[i].p.y, LIME);
-			DrawRectanglePro(r,{half_r_width,half_r_height},body_segments[i].angle,LIME);
+			body_segment_reptation_motion_angle = std::sin( -current_phase) * 20;
+			DrawRectanglePro(r,{half_r_width,half_r_height},body_segments[i].angle+ body_segment_reptation_motion_angle,LIME);
 			p = body_segments[i].origin;
 			DrawCircle(body_segments[i].origin.x,body_segments[i].origin.y,2,ORANGE);
 	}
