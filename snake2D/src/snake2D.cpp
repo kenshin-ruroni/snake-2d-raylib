@@ -51,7 +51,9 @@ int main ()
     int zoomMode = 0;   // 0-Mouse Wheel, 1-Mouse Move
     double dangle = 0;
 
-    SetTargetFPS(60);                   // Set our game to run at 60 frames-per-second
+    SetTargetFPS(120);    // Set our game to run at 60 frames-per-second
+
+    char fpsStr[128];
     //--------------------------------------------------------------------------------------
     Vector2 direction = {std::sqrt(2),std::sqrt(2)};
 
@@ -72,7 +74,7 @@ int main ()
     			dangle = 0;
     			fast_turn_enabled = false;
     		} else{
-    			dangle+= 0.0002;
+    			dangle+= 0.0005;
     		}
 
     	}else{
@@ -185,9 +187,10 @@ int main ()
             DrawTextEx(GetFontDefault(), TextFormat("[%i, %i]", GetMouseX(), GetMouseY()),
                 Vector2Add(GetMousePosition(), (Vector2){ -44, -24 }), 20, 2, BLACK);
 
-            DrawText("[1][2] Select mouse zoom mode (Wheel or Move)", 20, 20, 20, DARKGRAY);
-            if (zoomMode == 0) DrawText("Mouse left button drag to move, mouse wheel to zoom", 20, 50, 20, DARKGRAY);
-            else DrawText("Mouse left button drag to move, mouse press and move to zoom", 20, 50, 20, DARKGRAY);
+            sprintf(fpsStr, " fps %i ",GetFPS() );
+
+            DrawText(fpsStr, 20, 20, 20, DARKGRAY);
+
 
         EndDrawing();
 

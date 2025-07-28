@@ -55,7 +55,7 @@ public:
 	Vector2 direction = {1.0,0};
 	Vector2 perpendicular_direction = {0,1};
 
-	float r_width = 5,r_height  = 20;
+	float r_width = 2,r_height  = 20;
 
 	float half_r_width = r_width/2, half_r_height = r_height/2;
 
