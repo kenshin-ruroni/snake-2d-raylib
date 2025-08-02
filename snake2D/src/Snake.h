@@ -88,7 +88,7 @@ struct Snake {
 
 	size_t segments_points_size = 0;
 
-	float base = 40,height = 40;
+	float base = 60,height = 60;
 
 	Vector2 collision_position;
 	
@@ -208,15 +208,15 @@ struct Snake {
 			}
 
 			if ( false){
-			head_origin = {head_position.x-direction.x*0.5,head_position.y-direction.y*0.5};
-			t[0]={head_origin.x+base*0.5*perpendicular_direction.x,head_origin.y+base*0.5*perpendicular_direction.y};
-			t[1]={head_origin.x-base*0.5*perpendicular_direction.x,head_origin.y-base*0.5*perpendicular_direction.y};
+			head_origin = {head_position.x-direction.x*0.05f,head_position.y-direction.y*0.05f};
+			t[0]={head_origin.x+base*0.5f*perpendicular_direction.x,head_origin.y+base*0.5f*perpendicular_direction.y};
+			t[1]={head_origin.x-base*0.5f*perpendicular_direction.x,head_origin.y-base*0.5f*perpendicular_direction.y};
 			t[2]={head_origin.x+height*direction.x,head_origin.y+height*direction.y};
 			}
 			else{
-				head_origin = {head_position.x-reptation_direction.x*0.5,head_position.y-reptation_direction.y*0.5};
-					t[0]={head_origin.x+base*0.5*perpendicular_reptation_direction.x,head_origin.y+base*0.5*perpendicular_reptation_direction.y};
-					t[1]={head_origin.x-base*0.5*perpendicular_reptation_direction.x,head_origin.y-base*0.5*perpendicular_reptation_direction.y};
+				head_origin = {head_position.x-reptation_direction.x*0.5f,head_position.y-reptation_direction.y*0.5f};
+					t[0]={head_origin.x+base*0.5f*perpendicular_reptation_direction.x,head_origin.y+base*0.5f*perpendicular_reptation_direction.y};
+					t[1]={head_origin.x-base*0.5f*perpendicular_reptation_direction.x,head_origin.y-base*0.5f*perpendicular_reptation_direction.y};
 					t[2]={head_origin.x+height*reptation_direction.x,head_origin.y+height*reptation_direction.y};
 			}
 			//DrawCircle(current_position.x,current_position.y, half_segment_radius, LIME);

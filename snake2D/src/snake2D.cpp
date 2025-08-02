@@ -12,6 +12,10 @@
 #include "Fruit.h"
 
 
+#define max_delta_angle 0.0005f
+#define max_delta_angle_steps 60.0f
+
+#define delta_angle_step max_delta_angle/max_delta_angle_steps
 
 Snake the_snake;
 
@@ -58,31 +62,36 @@ int main ()
     Vector2 direction = {std::sqrt(2),std::sqrt(2)};
 
     bool fast_turn_enabled = true;
+
+    bool keyLeftPressed = false;
+    bool keyRightPressed = false;
     // Main game loop
     while (!WindowShouldClose())        // Detect window close button or ESC key
     {
 
+    	keyRightPressed = IsKeyDown(KEY_RIGHT);
+    	keyLeftPressed = IsKeyDown(KEY_LEFT);
     	previousTime = currentTime;
     	currentTime = GetTime();
     	deltaTime = 1; //currentTime - previousTime;
 
     	// the more we press a key the more the snake turns fast
-    	if (fast_turn_enabled && ( IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_LEFT) ) ){
+    	if (fast_turn_enabled && ( keyRightPressed || keyLeftPressed ) ){
 
-    		if( dangle > 0.5 )
+    		if( dangle > max_delta_angle )
     		{
     			dangle = 0;
     			fast_turn_enabled = false;
     		} else{
-    			dangle+= 0.0005;
+    			dangle+= delta_angle_step  ;
     		}
 
     	}else{
     		dangle = 0;fast_turn_enabled = true;
     	}
 
-    	if (IsKeyDown(KEY_RIGHT)) the_snake.angle += 0.01 + dangle;
-    	if (IsKeyDown(KEY_LEFT)) the_snake.angle -= 0.01 + dangle;
+    	if (keyRightPressed) the_snake.angle += 0.01 + dangle;
+    	if (keyLeftPressed) the_snake.angle -= 0.01 + dangle;
 
 
 
