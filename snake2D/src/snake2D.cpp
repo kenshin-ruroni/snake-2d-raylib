@@ -49,7 +49,7 @@ int main ()
     camera.offset = (Vector2){ screenWidth/2.0f, screenHeight/2.0f };
 
     Vector2 p;
-    the_snake.initializePosition(p = {(float)GetScreenWidth()/2, (float)GetScreenHeight()/2});
+    the_snake.initialize(p = {(float)GetScreenWidth()/2, (float)GetScreenHeight()/2});
 
     the_snake.speed = {speed,speed};
     int zoomMode = 0;   // 0-Mouse Wheel, 1-Mouse Move

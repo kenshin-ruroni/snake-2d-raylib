@@ -49,8 +49,9 @@ struct body_segment{
 		center = {origin.x+half_r_width,origin.y+half_r_height};
 		r= {origin.x,origin.y,r_width,r_height};
 							//DrawLine(p.x, p.y,segments[i].p.x,segments[i].p.y, LIME);
-		reptation_motion_angle = std::sin( 300.0f * TWO_PI  *current_time) * 20;
-		DrawRectanglePro(r,{half_r_width,half_r_height},total_angle = angle- reptation_motion_angle,LIME);
+		reptation_motion_angle = std::sin( 160.0f * TWO_PI  *current_time) * 20.0f;
+		total_angle = angle- reptation_motion_angle;
+		DrawRectanglePro(r,{half_r_width,half_r_height},angle- 0.5f * reptation_motion_angle,LIME);
 		DrawCircle(origin.x,origin.y,half_r_width,ORANGE);
 
 		total_angle *= DEG2RAD;
@@ -129,15 +130,17 @@ struct Snake {
 	Vector2 reptation_direction, oscillation_direction;
 	Vector2 perpendicular_reptation_direction = {0,1};
 
-	inline void initializePosition(Vector2 p){
+	inline void initialize(Vector2 p){
 		 current_position =p;
 		 last_position = p;
 		 head_position = p;
 		 last_head_position = head_position;
+		 body_segment dummy;
+		 points_distance_squared = dummy.r_width * dummy.r_width;
 	}
 
 	inline void add_a_body_segment(){
-		if ( Vector2LengthSqr(current_position - last_position) >= 150) //points_distance_squared)
+		if ( Vector2LengthSqr(current_position - last_position) >= points_distance_squared)
 		{
 
 			current_amplitude = (current_phase = std::sin(omega*(current_time+=dt ))) * reptation_amplitude;
@@ -159,8 +162,6 @@ struct Snake {
 			last_position = current_position;
 			body_segments.push_front({ head_position,
 				(reptation_angle_in_radians )*RAD2DEG });
-
-
 		}
 	}
 	inline void detectCollision(std::deque<Fruit> *fruits){
