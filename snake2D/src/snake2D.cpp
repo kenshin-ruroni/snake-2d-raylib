@@ -88,7 +88,7 @@ int main ()
 
     	direction = {std::cos(the_snake.angle),std::sin(the_snake.angle)};
     	the_snake.direction = direction;
-    	the_snake.perpendicular_direction = {std::sin(the_snake.angle),-std::cos(the_snake.angle)};
+    	the_snake.perpendicular_direction = {direction.y,-direction.x};
 
     	the_snake.speed.x = speed * direction.x * deltaTime;
     	the_snake.speed.y = speed *direction.y * deltaTime;
