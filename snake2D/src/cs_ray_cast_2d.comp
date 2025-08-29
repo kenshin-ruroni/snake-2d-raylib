@@ -88,7 +88,7 @@ bool ray_cast_2d(vec2 fpos)
 	int number_of_segments = int(teinte.w);
 	
 	Segment2d ray;
-	vec2 mouse_position = mouse_and_window_center_position.xy;
+	vec2 mouse_position = mouse_and_window_center_position.zw;
 	ray.start =local2world(mouse_position) ;
 	ray.end = fpos;
 	
@@ -129,14 +129,17 @@ void main()
 	ivec2 size = imageSize(u_input_image);
     ivec2 pixel_coord = ivec2(gl_GlobalInvocationID.xy);
 
+	vec2 world_window_center = vec2(mouse_and_window_center_position.zw);
+	vec2 pixel_world_coord = vec2(pixel_coord.x+world_window_center.x-size.x/2,pixel_coord.y+world_window_center.y-size.y/2);
+
     vec4 inPixel = imageLoad(u_input_image, pixel_coord);
 
-	float d = length( mouse_and_window_center_position.xy - pixel_coord );
+	float d = length( mouse_and_window_center_position.zw - pixel_world_coord );
 
 	vec4 light = 1./(1 + d*d/(450*450)) *vec4(teinte.xyz,1); 
 
-	vec2 world_window_center = vec2(mouse_and_window_center_position.zw);
-	vec2 pixel_world_coord = vec2(pixel_coord.x+world_window_center.x-size.x/2,pixel_coord.y+world_window_center.y-size.y/2);
+
+
 
 	vec4 color_collision;
 	bool ray_collides = ray_cast_2d(pixel_world_coord);
@@ -153,7 +156,7 @@ void main()
 	int number_of_polygons = int(teinte.w);
 	for (int i = 0; i < number_of_polygons;i++){
 		vec4 segment = segfloat4[i];
-		polygons_color += DrawLine(pixel_coord,segment.xy,segment.zw,5,vec4(1,1,0,1)) ;
+		polygons_color += DrawLine(pixel_world_coord,segment.xy,segment.zw,5,vec4(1,1,0,1)) ;
 	}
 
 	vec4 final_pixel = 0.5 *( color_collision  + polygons_color* (1.0 - float(ray_collides)) )* light;
