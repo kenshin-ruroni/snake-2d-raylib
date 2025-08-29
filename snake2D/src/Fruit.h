@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "raylib.h";
+#include "raylib.h"
 
 struct Fruit {
 	Vector2 p;

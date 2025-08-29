@@ -1,0 +1,163 @@
+#version 460
+
+
+struct Segment2d{
+//  points.xy = start point of segment
+// points.zw = end point of segment
+    vec2 start;
+	vec2 end;
+};
+
+layout(std430, binding = 0 ) buffer segments_layout {
+    vec4 segfloat4[];       
+};
+
+ layout( binding = 0,rgba8) uniform coherent image2D u_input_image;
+ layout( binding = 1,rgba8) uniform coherent image2D u_output_image;
+
+layout(location = 3) uniform vec4 teinte;
+layout(location = 4) uniform vec4 mouse_and_window_center_position;
+
+
+
+float cross_product2d(vec2 v1, vec2 v2)
+{
+	return v1.x*v2.y - v1.y*v2.x;
+}
+
+/*
+	local_position is screen coordinate
+*/
+vec2 local2world(vec2 local_position){
+
+	ivec2 size = imageSize(u_input_image);
+	vec2 world_window_center = vec2(mouse_and_window_center_position.zw);
+	return vec2(local_position.x+world_window_center.x-size.x/2,local_position.y+world_window_center.y-size.y/2);
+}
+vec2 vector2(vec2 p0, vec2 p1)
+{
+	vec2 v;
+	v.x = p1.x-p0.x;
+	v.y = p1.y-p0.y;
+	return v;
+}
+
+/*
+	return -1 if no collision
+	return 0 if collision is on edge of segment
+	// return 1 if collision is inside segment
+*/
+int collision_segment_segment(Segment2d segment_1,Segment2d segment_2)
+{
+
+	// end points of segment 1
+	vec2 A = segment_1.start.xy;
+	vec2 B = segment_1.end.xy;
+	
+	// end points of segment 2
+	vec2 Ap = segment_2.start.xy;
+	vec2 Bp = segment_2.end.xy;
+	
+	vec2 ApA = vector2(Ap,A);
+	vec2 AB = vector2(A,B);
+	vec2 ApBp = vector2(Ap,Bp);
+	
+	float d = cross_product2d(AB,ApBp);
+	
+	if ( abs(d) < 0.000001 ){
+		// vecteurs AB et ApBp sont paralleles
+		// donc pas de collision possible
+		return -1;
+	}
+
+	float k = -cross_product2d(ApA,ApBp)/d;
+
+	float t = -cross_product2d(ApA,AB)/d;
+	// collision ssi k compris entre 0 et 1
+	if (k >=0.0 && k <=1.0 && t >=0.0 && t <= 1.0){
+		return 1;
+	};
+
+	return -1;
+
+}
+
+bool ray_cast_2d(vec2 fpos)
+{
+
+	int number_of_segments = int(teinte.w);
+	
+	Segment2d ray;
+	vec2 mouse_position = mouse_and_window_center_position.xy;
+	ray.start =local2world(mouse_position) ;
+	ray.end = fpos;
+	
+
+	Segment2d segment ;
+	for (int i = 0; i <number_of_segments;i++)
+	{
+		
+
+		segment.start = segfloat4[i].xy;
+		segment.end = segfloat4[i].zw;
+		
+		int collision_result = collision_segment_segment(ray,segment);
+		if(  collision_result != -1 )
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+vec4 DrawLine(vec2 curpixel, vec2 a, vec2 b, float lineThickness, vec4 col)
+{
+    vec2 p = curpixel;
+    float t = lineThickness;
+    vec2 c = b - a;
+    vec2 n = normalize(vec2(-c.y, +c.x)); // normalized cross ab
+    vec2 i = -(n * dot(n, p - a) * 2.0f); // inflected perp normal
+	float norm = float(i.x * i.x + i.y * i.y)/(t*t);
+    float invdist2line = 1.0f - max(0,min(norm,1)); // inverted distance of point to line.
+	float test = sign(dot(a - p, -c) * dot(b - p, c) + 0.001f);
+    return col * invdist2line * max(0,min(test,1)); // + 0.0001f  determine point is within segment.
+}
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+void main()
+{
+	ivec2 size = imageSize(u_input_image);
+    ivec2 pixel_coord = ivec2(gl_GlobalInvocationID.xy);
+
+    vec4 inPixel = imageLoad(u_input_image, pixel_coord);
+
+	float d = length( mouse_and_window_center_position.xy - pixel_coord );
+
+	vec4 light = 1./(1 + d*d/(450*450)) *vec4(teinte.xyz,1); 
+
+	vec2 world_window_center = vec2(mouse_and_window_center_position.zw);
+	vec2 pixel_world_coord = vec2(pixel_coord.x+world_window_center.x-size.x/2,pixel_coord.y+world_window_center.y-size.y/2);
+
+	vec4 color_collision;
+	bool ray_collides = ray_cast_2d(pixel_world_coord);
+
+	if ( ray_collides )
+	{
+		color_collision = inPixel *vec4(0.0,0.0,0.0,1);
+	}
+	else{
+		color_collision = inPixel;
+	}
+
+	vec4 polygons_color = vec4(0,0,0,1);
+	int number_of_polygons = int(teinte.w);
+	for (int i = 0; i < number_of_polygons;i++){
+		vec4 segment = segfloat4[i];
+		polygons_color += DrawLine(pixel_coord,segment.xy,segment.zw,5,vec4(1,1,0,1)) ;
+	}
+
+	vec4 final_pixel = 0.5 *( color_collision  + polygons_color* (1.0 - float(ray_collides)) )* light;
+	imageStore(u_output_image, pixel_coord, final_pixel);
+	//float dummy = time + 5;
+	//imageStore(u_output_image, pixel_coord,vec4(1,1,0,1));
+}

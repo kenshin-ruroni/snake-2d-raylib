@@ -2,11 +2,6 @@
 #include <chrono>
 #include <thread>
 
-#define RLGL_IMPLEMENTATION
-#define RLGL_SHOW_GL_DETAILS_INFO
-#define RLGL_ENABLE_OPENGL_DEBUG_CONTEXT
-#define GRAPHICS_API_OPENGL_43
-#define SUPPORT_TRACELOG
 
 #include "raylib.h"
 
@@ -26,84 +21,36 @@ Snake the_snake;
 
 std::deque<Fruit> fruits;
 
-
-  typedef std::vector<Vector2> segment;
-
+struct wall{
+    std::vector<Vector2> points;
+};
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 800
-
-
-void CustomLog(int msgType, const char *text, va_list args)
-{
-    char timeStr[64] = { 0 };
-    time_t now = time(NULL);
-    struct tm *tm_info = localtime(&now);
-
-    strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", tm_info);
-    printf("[%s] ", timeStr);
-
-    switch (msgType)
-    {
-        case LOG_INFO: printf("[INFO] : "); break;
-        case LOG_ERROR: printf("[ERROR]: "); break;
-        case LOG_WARNING: printf("[WARN] : "); break;
-        case LOG_DEBUG: printf("[DEBUG]: "); break;
-        default: break;
-    }
-
-    vprintf(text, args);
-    printf("\n");
-}
 
 void render_scene_to_rendertarget(RenderTexture2D render_texture){
 
     BeginTextureMode(render_texture);
 }
 
-#define sizeofFloat4 sizeof(float)*4
-
 //------------------------------------------------------------------------------------
 // Program main entry point
 //------------------------------------------------------------------------------------
 int main ()
 {
-    // Set custom logger
-    SetTraceLogCallback(CustomLog);
-    /*
-        WARNING image coordinates goes like this
 
-        _____________________________________________________
-        |                                                w,h|
-        |                                                   |
-        |                                                   |
-        |0,0________________________________________________| 
-    
-    */
-
-    // all segments corresponding to walls
-std::vector<std::vector<float>> segments = {
-    { 10 ,WINDOW_HEIGHT - 10,100, WINDOW_HEIGHT - 10},
-    {100,WINDOW_HEIGHT - 10, 100, WINDOW_HEIGHT - 50},
-    {100,WINDOW_HEIGHT - 50, 60,  WINDOW_HEIGHT - 50},
-    {60 ,WINDOW_HEIGHT - 50, 60,  WINDOW_HEIGHT - 120},
-    {60 ,WINDOW_HEIGHT - 120,100, WINDOW_HEIGHT - 120},
-    {100,WINDOW_HEIGHT - 120,100, WINDOW_HEIGHT - 140},
-    {100,WINDOW_HEIGHT - 140,10,  WINDOW_HEIGHT - 140},
-    {10 ,WINDOW_HEIGHT - 140,10,  WINDOW_HEIGHT - 10}
-};
-
-std::vector<segment> walls={
+std::vector<wall> walls={
     { 
+        .points = 
         {
-            {.x= 10 ,.y=WINDOW_HEIGHT - 10},{ .x=100,.y= WINDOW_HEIGHT - 10},
-            {.x= 100,.y=WINDOW_HEIGHT - 10},{ .x=100,.y= WINDOW_HEIGHT - 50},
-            {.x= 100,.y=WINDOW_HEIGHT - 50},{ .x=60, .y= WINDOW_HEIGHT - 50},
-            {.x= 60 ,.y=WINDOW_HEIGHT - 50},{ .x=60, .y= WINDOW_HEIGHT - 120},
-            {.x= 60 ,.y=WINDOW_HEIGHT - 120},{.x=100,.y= WINDOW_HEIGHT - 120},
-            {.x= 100,.y=WINDOW_HEIGHT - 120},{.x=100,.y= WINDOW_HEIGHT - 140},
-            {.x= 100,.y=WINDOW_HEIGHT - 140},{.x=10, .y= WINDOW_HEIGHT - 140},
-            {.x= 10 ,.y=WINDOW_HEIGHT - 140},{.x=10, .y= WINDOW_HEIGHT - 10}
+            {.x=WINDOW_WIDTH - 10 ,.y=WINDOW_HEIGHT - 10},{ .x=WINDOW_WIDTH - 100,.y= WINDOW_HEIGHT - 10},
+            {.x=WINDOW_WIDTH - 100,.y=WINDOW_HEIGHT - 10},{ .x=WINDOW_WIDTH - 100,.y= WINDOW_HEIGHT - 50},
+            {.x=WINDOW_WIDTH - 100,.y=WINDOW_HEIGHT - 50},{ .x=WINDOW_WIDTH - 60, .y= WINDOW_HEIGHT - 50},
+            {.x=WINDOW_WIDTH - 60 ,.y=WINDOW_HEIGHT - 50},{ .x=WINDOW_WIDTH - 60, .y= WINDOW_HEIGHT - 120},
+            {.x=WINDOW_WIDTH - 60 ,.y=WINDOW_HEIGHT - 120},{.x=WINDOW_WIDTH - 100,.y= WINDOW_HEIGHT - 120},
+            {.x=WINDOW_WIDTH - 100,.y=WINDOW_HEIGHT - 120},{.x=WINDOW_WIDTH - 100,.y= WINDOW_HEIGHT - 140},
+            {.x=WINDOW_WIDTH - 100,.y=WINDOW_HEIGHT - 140},{.x=WINDOW_WIDTH - 10, .y= WINDOW_HEIGHT - 140},
+            {.x=WINDOW_WIDTH - 10 ,.y=WINDOW_HEIGHT - 140},{.x=WINDOW_WIDTH - 10, .y= WINDOW_HEIGHT - 10}
         }
     }
 };
@@ -116,49 +63,7 @@ std::vector<segment> walls={
     InitWindow(screenWidth, screenHeight, "SnAkE");
 
 
-    RenderTexture2D offscreen_render_target = LoadRenderTexture(screenWidth, screenHeight);
-    RenderTexture2D final_target = LoadRenderTexture(screenWidth, screenHeight);
-    BeginTextureMode(final_target);
-    ClearBackground(BLUE);
-    EndTextureMode();
-    
-    // get compute shader code and compile
-
-    char *compute_shader_raycast2d_code = LoadFileText("cs_ray_cast_2d.comp");
-    unsigned int compiled_raycast2d_compute_shader = rlCompileShader(compute_shader_raycast2d_code, RL_COMPUTE_SHADER);
-    if (compiled_raycast2d_compute_shader == 0 ){
-        printf("error occurred during compute shader compilation. \n");
-    }
-    unsigned int compute_shader_program = rlLoadComputeShaderProgram(compiled_raycast2d_compute_shader);
-
-    Shader cs_shader = {.id = compiled_raycast2d_compute_shader};
-
-     int teinte_Loc = rlGetLocationUniform(compute_shader_program,"teinte");
-     int mouseposition_Loc = rlGetLocationUniform(compute_shader_program,"mouse_position");
-
-    
-    UnloadFileText(compute_shader_raycast2d_code);
-    // Load shader storage buffer object (SSBO), id returned
-
-    float toto[segments.size()*4]={0};
-    int kkk = 0;
-    for (auto iii = segments.begin();iii != segments.end();iii++){
-
-        for (auto jjj = iii->begin();jjj != iii->end();jjj++){
-            toto[kkk++] = *jjj;
-        }
-    }
-
-    //memcpy(toto,(void *)segments.data(),segments.size()*sizeofFloat4);
-
-    unsigned int ssboWalls = rlLoadShaderBuffer(segments.size()*4*sizeof(float), (void *)toto, RL_DYNAMIC_READ);
-    //rlUpdateShaderBuffer(ssboWalls, (void *)toto, segments.size()*4*sizeof(float), 0);
-
-    Shader render_shader =  LoadShader(NULL, "render.fs");
-    int texLoc = GetShaderLocation(render_shader, "screen_texture");
-
-    
-    /*
+    RenderTexture2D target = LoadRenderTexture(screenWidth, screenHeight);
     BeginTextureMode(target);
     for (auto wall = walls.begin();wall != walls.end();wall++)
     DrawLineStrip(wall->points.data(),wall->points.size(),BLACK);
@@ -172,8 +77,6 @@ std::vector<segment> walls={
     Image c = LoadImageFromTexture(target.texture);
     
     ExportImage(c,"toto.png");
-
-    */
 
 	fruits = {{10,10,30},{30,50,20},{100,150,10},{180,150,30}};
 
@@ -235,6 +138,8 @@ std::vector<segment> walls={
 
     	if (keyRightPressed) the_snake.angle += 0.01 + dangle;
     	if (keyLeftPressed) the_snake.angle -= 0.01 + dangle;
+
+
 
     	direction = {std::cos(the_snake.angle),std::sin(the_snake.angle)};
     	the_snake.direction = direction;
@@ -306,9 +211,9 @@ std::vector<segment> walls={
         }
         //----------------------------------------------------------------------------------
 
-        // render screen offline 
+        // Draw
         //----------------------------------------------------------------------------------
-        BeginTextureMode(offscreen_render_target);
+        BeginDrawing();
             ClearBackground(RAYWHITE);
 
             BeginMode2D(camera);
@@ -340,59 +245,7 @@ std::vector<segment> walls={
             sprintf(fpsStr, " fps %i ",GetFPS() );
 
             DrawText(fpsStr, 20, 20, 20, DARKGRAY);
-        EndTextureMode();
-        float teinte[4]={1,1,1,segments.size()};
-        Vector2 mouse = GetMousePosition();
-        float mouse_and_window_center_position[4] = {mouse.x,mouse.y,the_snake.current_position.x,the_snake.current_position.y};
-        // we use compute shader to render to this texture
-        uint sss = rlGetShaderBufferSize(ssboWalls);
-        float ttt[segments.size()*4]={0};
-        rlReadShaderBuffer(ssboWalls, (void *) ttt, segments.size()*4*sizeof(float), 0);
-            rlEnableShader(compute_shader_program);
 
-           // int mouse_position_Loc = rlGetLocationUniform(compiled_raycast2d_compute_shader,"mouse_position");
-            rlBindShaderBuffer(ssboWalls, 0);
-            rlSetUniform(3,(void *)teinte,RL_SHADER_UNIFORM_VEC4,1);
-            rlSetUniform(4,(void *)mouse_and_window_center_position,RL_SHADER_UNIFORM_VEC4,1);
-
-            int output_image_location= rlGetLocationUniform(compute_shader_program,"u_output_image");
-            int input_image_location= rlGetLocationUniform(compute_shader_program,"u_input_image");
-
-            float time = 1;
-            rlSetUniform(5,(void *)&time,RL_SHADER_UNIFORM_FLOAT,1);
-
-            rlActiveTextureSlot(input_image_location);
-            rlEnableTexture(input_image_location);
-
-  
-
-            rlBindImageTexture(offscreen_render_target.texture.id,0,offscreen_render_target.texture.format,false);
-
-            rlActiveTextureSlot(output_image_location);
-            rlEnableTexture(output_image_location);
-
-
-            rlBindImageTexture(final_target.texture.id,1,final_target.texture.format,false);
-            rlComputeShaderDispatch(WINDOW_WIDTH/8, WINDOW_HEIGHT/8, 1); // Each GPU unit will process a command!
-            rlDisableShader();
-
-//Image c = LoadImageFromTexture(final_target.texture);
-    
-//  ExportImage(c,"screen.png");
-
-        // we draw the final image
-        BeginDrawing();
-
-            ClearBackground(BLANK);
-
-            BeginShaderMode(render_shader);
-            // 
-            SetShaderValueTexture(render_shader, texLoc, final_target.texture);
-
-            DrawTexture(final_target.texture, 0, 0, WHITE);
-            EndShaderMode();
-            
-            DrawFPS(GetScreenWidth() - 100, 10);
 
         EndDrawing();
 
@@ -400,8 +253,6 @@ std::vector<segment> walls={
         camera.target = the_snake.current_position;
         //----------------------------------------------------------------------------------
     }
-
-    
 
     // De-Initialization
     //--------------------------------------------------------------------------------------
