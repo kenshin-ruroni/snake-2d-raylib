@@ -160,7 +160,7 @@ std::vector<segment> walls=
 	fruits = {{10,10,30},{30,50,20},{100,150,10},{180,150,30}};
 
 
-    float speed = 0.5;
+    float speed = 1;
 
     double currentTime = GetTime();
     double previousTime = currentTime;
@@ -193,7 +193,7 @@ std::vector<segment> walls=
 
 
     Matrix world2screen_matrix ;
-    float world2screen[6];
+    float world2screen[7];
     // Main game loop
     while (!WindowShouldClose())        // Detect window close button or ESC key
     {
@@ -202,7 +202,7 @@ std::vector<segment> walls=
 
         world2screen[0]=world2screen_matrix.m0;world2screen[1]=world2screen_matrix.m4;world2screen[2]=world2screen_matrix.m12;
         world2screen[3]=world2screen_matrix.m1;world2screen[4]=world2screen_matrix.m5;world2screen[5]=world2screen_matrix.m13;
-
+        world2screen[6] = camera.zoom;
     	keyRightPressed = IsKeyDown(KEY_RIGHT);
     	keyLeftPressed = IsKeyDown(KEY_LEFT);
     	previousTime = currentTime;
@@ -352,7 +352,7 @@ std::vector<segment> walls=
            // int mouse_position_Loc = rlGetLocationUniform(compiled_raycast2d_compute_shader,"mouse_position");
             rlBindShaderBuffer(ssboWalls, 0);
             rlSetUniform(3,(void *)teinte,RL_SHADER_UNIFORM_VEC4,1);
-            rlSetUniform(4,(void *)world2screen,RL_SHADER_UNIFORM_FLOAT,6);
+            rlSetUniform(4,(void *)world2screen,RL_SHADER_UNIFORM_FLOAT,7);
 
             int output_image_location= rlGetLocationUniform(compute_shader_program,"u_output_image");
             int input_image_location= rlGetLocationUniform(compute_shader_program,"u_input_image");
