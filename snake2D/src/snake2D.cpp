@@ -84,27 +84,74 @@ int main ()
 
     // all segments corresponding to walls
 std::vector<std::vector<float>> segments = {
-    { 10 ,flip_y(10),600,flip_y(10)},
-    {600,flip_y( 10), 600, flip_y( 100 )},
-    {600,flip_y( 100), 60, flip_y( 100 )},
-    {60 ,flip_y( 100), 60, flip_y( 600 )},
-    {60 ,flip_y( 600),600, flip_y( 600 )},
-    {600,flip_y( 600),600, flip_y( 700 )},
-    {600,flip_y( 700),10,  flip_y( 700 )},
-    {10 ,flip_y( 700),10,  flip_y( 10 )} 
+    // first polygon
+    { 10 ,flip_y(10),800,flip_y(10)},
+    {800,flip_y( 10), 800, flip_y( 200 )},
+    {800,flip_y( 200), 60, flip_y( 200 )},
+    {60 ,flip_y( 200), 60, flip_y( 1600 )},
+    {60 ,flip_y( 1600),1000, flip_y( 1600 )},
+    {1000,flip_y( 1600),1000, flip_y( 1800 )},
+    {1000,flip_y( 1800),10,  flip_y( 1800 )},
+    {10 ,flip_y( 1800),10,  flip_y( 10 )}, 
+    // second polygon
+    {  400 ,flip_y(600),1000,flip_y(600)},
+    { 1000 ,flip_y( 600), 1000, flip_y( 800 )},
+    { 1000 ,flip_y( 800), 400, flip_y( 800 )},
+    { 400  ,flip_y( 800), 400, flip_y( 600 )},
+    // third polygon
+    {  1400 ,flip_y(600),2000,flip_y(600)},
+    { 2000 ,flip_y( 600), 2000, flip_y( 800 )},
+    { 2000 ,flip_y( 800), 1400, flip_y( 800 )},
+    { 1400  ,flip_y( 800), 1400, flip_y( 600 )},
+    // fourth polygon
+     { 2400 ,flip_y(10),3200,flip_y(10)},
+    {3200,flip_y( 10), 3200, flip_y( 1800 )},
+    {3200,flip_y( 1800), 2400, flip_y( 1800 )},
+    {2400 ,flip_y( 1800), 2400, flip_y( 1600 )},
+    {2400 ,flip_y( 1600),2900, flip_y( 1600 )},
+    {2900,flip_y( 1600),2900, flip_y( 200 )},
+    {2900,flip_y( 200),2400,  flip_y( 200 )},
+    {2400 ,flip_y( 200),2400,  flip_y( 10 )}
+
 }; 
-std::vector<segment> walls= 
+std::vector<std::vector<segment>> walls= 
 {  
-    
-       { {.x = 10 ,.y = flip_y(10)},{  600,flip_y(10)} },
-       { {.x = 600,.y = flip_y( 10) },{  600, flip_y( 100 )} },
-       { {.x = 600,.y = flip_y( 100)},{ 60, flip_y( 100 )}   },
-       { {.x = 60 ,.y = flip_y( 100)},{ 60, flip_y( 600 )}   },
-       { {.x = 60 ,.y = flip_y( 600)},{ 600, flip_y( 600 )}  },
-       { {.x = 600,.y = flip_y( 600)},{ 600, flip_y( 700 )}  },
-       { {.x = 600,.y = flip_y( 700)},{ 10,  flip_y( 700 )}  },
-       { {.x = 10 ,.y = flip_y( 700)},{ 10,  flip_y( 10  )} }
-    
+        // first 
+        {
+            { {.x = 10 ,.y = flip_y(10)},   {  .x = 800, .y = flip_y(10)} },
+            { {.x = 800,.y = flip_y( 10) }, {  .x = 800, .y = flip_y( 200 )} },
+            { {.x = 800,.y = flip_y( 200)}, {  .x = 60,  .y = flip_y( 200 )} },
+            { {.x = 60 ,.y = flip_y( 200)}, {  .x = 60,  .y = flip_y( 1600 )} },
+            { {.x = 60 ,.y = flip_y( 1600)},{  .x = 1000, .y = flip_y( 1600 )} },
+            { {.x = 1000,.y = flip_y( 1600)},{  .x = 1000, .y = flip_y( 1800 )} },
+            { {.x = 1000,.y = flip_y( 1800)},{  .x = 10,  .y = flip_y( 1800 )} },
+            { {.x = 10 ,.y = flip_y( 1800)},{  .x = 10,  .y = flip_y( 10  )} }
+        },
+        {
+            // second polygon
+                {{  .x = 400 ,  .y = flip_y(600)},{   .x = 1000, .y = flip_y(600)}},
+                {{  .x = 1000 , .y = flip_y( 600)},{  .x = 1000, .y = flip_y( 800 )}},
+                {{  .x = 1000 , .y = flip_y( 800)}, { .x = 400,  .y = flip_y( 800 )}},
+                {{  .x = 400  , .y = flip_y( 800)}, { .x = 400,  .y = flip_y( 600 )}}
+        },
+        // third polygon
+        {
+            { {.x = 1400 , .y =  flip_y(600)} , { .x = 2000,  .y =  flip_y(600) } },
+            { {.x = 2000,  .y = flip_y( 600) }, { .x = 2000,  .y =   flip_y( 800 ) } },
+            { {.x = 2000,  .y = flip_y( 800) }, { .x = 1400,  .y =   flip_y( 800 ) } },
+            { {.x = 1400 , .y = flip_y( 800) }, { .x = 1400,  .y =   flip_y( 600 ) } }
+        },
+        // fourth polygon
+        {
+            { { .x = 2400 , .y = flip_y(10)},{     .x = 3200,  .y = flip_y(10)}},
+            { { .x = 3200,  .y = flip_y( 10)},{    .x = 3200,  .y = flip_y( 1800 )}},
+            { { .x = 3200,  .y = flip_y( 1800)},{  .x = 2400,  .y = flip_y( 1800 )}},
+            { { .x = 2400 , .y = flip_y( 1800)},{  .x = 2400,  .y = flip_y( 1600 )}},
+            { { .x = 2400 , .y = flip_y( 1600)},{  .x = 2900,  .y = flip_y( 1600 )}},
+            { { .x = 2900,  .y = flip_y( 1600)},{  .x = 2900,  .y = flip_y( 200 )}},
+            { { .x = 2900,  .y = flip_y( 200)},{  .x = 2400,  .y = flip_y( 200 )}},
+            { { .x = 2400 , .y = flip_y( 200)},{  .x = 2400,    .y = flip_y( 10 )}}
+        }
  
 }; 
  
@@ -140,18 +187,18 @@ std::vector<segment> walls=
     UnloadFileText(compute_shader_raycast2d_code);
     // Load shader storage buffer object (SSBO), id returned
 
-    float toto[segments.size()*4]={0};
+    float all_segments[segments.size()*4]={0};
     int kkk = 0;
     for (auto iii = segments.begin();iii != segments.end();iii++){
 
         for (auto jjj = iii->begin();jjj != iii->end();jjj++){
-            toto[kkk++] = *jjj;
+            all_segments[kkk++] = *jjj;
         }
     }
 
     //memcpy(toto,(void *)segments.data(),segments.size()*sizeofFloat4);
 
-    unsigned int ssboWalls = rlLoadShaderBuffer(segments.size()*4*sizeof(float), (void *)toto, RL_DYNAMIC_READ);
+    unsigned int ssboWalls = rlLoadShaderBuffer(segments.size()*4*sizeof(float), (void *)all_segments, RL_DYNAMIC_READ);
     //rlUpdateShaderBuffer(ssboWalls, (void *)toto, segments.size()*4*sizeof(float), 0);
 
     Shader render_shader =  LoadShader(NULL, "render.fs");
@@ -323,9 +370,11 @@ std::vector<segment> walls=
 
 
                 //draw walls
-                for ( auto iii = walls.begin();iii != walls.end();iii++)
+                for ( auto polygons = walls.begin();polygons != walls.end();polygons++)
                 {
-                    DrawLineStrip(iii->data(),iii->size(),MAGENTA);
+                    for (auto polygon = polygons->begin(); polygon != polygons->end(); polygon ++){
+                    DrawLineStrip(polygon->data(),polygon->size(),MAGENTA);
+                    }
                 }
             EndMode2D();
 

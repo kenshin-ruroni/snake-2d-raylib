@@ -64,7 +64,7 @@ main-build: snake2D
 snake2D: $(OBJS) $(USER_OBJS) makefile $(OPTIONAL_TOOL_DEPS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++ -L/usr/local/lib -pthread -o "snake2D" $(OBJS) $(USER_OBJS) $(LIBS) -lraylib
+	g++ -L/usr/local/lib -pthread -o "snake2D" $(OBJS) $(USER_OBJS) $(LIBS) -lraylib -ldecor-gtk
 	@echo 'Finished building target: $@'
 	@echo ' '
 
