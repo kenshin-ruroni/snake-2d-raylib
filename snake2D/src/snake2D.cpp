@@ -196,14 +196,9 @@ std::vector<std::vector<segment>> walls=
         }
     }
 
-    //memcpy(toto,(void *)segments.data(),segments.size()*sizeofFloat4);
-
     unsigned int ssboWalls = rlLoadShaderBuffer(segments.size()*4*sizeof(float), (void *)all_segments, RL_DYNAMIC_READ);
-    //rlUpdateShaderBuffer(ssboWalls, (void *)toto, segments.size()*4*sizeof(float), 0);
 
-    Shader render_shader =  LoadShader(NULL, "render.fs");
-    int texLoc = GetShaderLocation(render_shader, "screen_texture");
-
+    // fruits 
 	fruits = {{10,10,30},{30,50,20},{100,150,10},{180,150,30}};
 
 
@@ -393,12 +388,10 @@ std::vector<std::vector<segment>> walls=
         float teinte[4]={1,1,1,segments.size()};
 
         // we use compute shader to render to this texture
-       // uint sss = rlGetShaderBufferSize(ssboWalls);
-       // float ttt[segments.size()*4]={0};
-       // rlReadShaderBuffer(ssboWalls, (void *) ttt, segments.size()*4*sizeof(float), 0);
+        
         rlEnableShader(compute_shader_program);
 
-           // int mouse_position_Loc = rlGetLocationUniform(compiled_raycast2d_compute_shader,"mouse_position");
+
             rlBindShaderBuffer(ssboWalls, 0);
             rlSetUniform(3,(void *)teinte,RL_SHADER_UNIFORM_VEC4,1);
             rlSetUniform(4,(void *)world2screen,RL_SHADER_UNIFORM_FLOAT,7);
@@ -408,35 +401,20 @@ std::vector<std::vector<segment>> walls=
 
             rlActiveTextureSlot(input_image_location);
             rlEnableTexture(input_image_location);
-
-  
-
             rlBindImageTexture(offscreen_render_target.texture.id,0,offscreen_render_target.texture.format,false);
 
             rlActiveTextureSlot(output_image_location);
             rlEnableTexture(output_image_location);
-
-
             rlBindImageTexture(final_target.texture.id,1,final_target.texture.format,false);
+
             rlComputeShaderDispatch(WINDOW_WIDTH/8, WINDOW_HEIGHT/8, 1); // Each GPU unit will process a command!
             rlDisableShader();
-
-//Image c = LoadImageFromTexture(final_target.texture);
-    
-//  ExportImage(c,"screen.png");
 
         // we draw the final image
         BeginDrawing();
 
             ClearBackground(BLANK);
-
-            BeginShaderMode(render_shader);
-            // 
-            SetShaderValueTexture(render_shader, texLoc, final_target.texture);
-
             DrawTexture(final_target.texture, 0, 0, WHITE);
-            EndShaderMode();
-            
             DrawFPS(GetScreenWidth() - 100, 10);
 
         EndDrawing();
