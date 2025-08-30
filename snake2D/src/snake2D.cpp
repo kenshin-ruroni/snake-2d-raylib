@@ -62,6 +62,7 @@ void render_scene_to_rendertarget(RenderTexture2D render_texture){
 }
 
 #define sizeofFloat4 sizeof(float)*4
+#define flip_y(y) (WINDOW_HEIGHT-y)
 
 //------------------------------------------------------------------------------------
 // Program main entry point
@@ -83,34 +84,33 @@ int main ()
 
     // all segments corresponding to walls
 std::vector<std::vector<float>> segments = {
-    { 10 ,WINDOW_HEIGHT - 10,100, WINDOW_HEIGHT - 10},
-    {100,WINDOW_HEIGHT - 10, 100, WINDOW_HEIGHT - 50},
-    {100,WINDOW_HEIGHT - 50, 60,  WINDOW_HEIGHT - 50},
-    {60 ,WINDOW_HEIGHT - 50, 60,  WINDOW_HEIGHT - 120},
-    {60 ,WINDOW_HEIGHT - 120,100, WINDOW_HEIGHT - 120},
-    {100,WINDOW_HEIGHT - 120,100, WINDOW_HEIGHT - 140},
-    {100,WINDOW_HEIGHT - 140,10,  WINDOW_HEIGHT - 140},
-    {10 ,WINDOW_HEIGHT - 140,10,  WINDOW_HEIGHT - 10}
-};
-
-std::vector<segment> walls={
-    { 
-        {
-            {.x= 10 ,.y=WINDOW_HEIGHT - 10},{ .x=100,.y= WINDOW_HEIGHT - 10},
-            {.x= 100,.y=WINDOW_HEIGHT - 10},{ .x=100,.y= WINDOW_HEIGHT - 50},
-            {.x= 100,.y=WINDOW_HEIGHT - 50},{ .x=60, .y= WINDOW_HEIGHT - 50},
-            {.x= 60 ,.y=WINDOW_HEIGHT - 50},{ .x=60, .y= WINDOW_HEIGHT - 120},
-            {.x= 60 ,.y=WINDOW_HEIGHT - 120},{.x=100,.y= WINDOW_HEIGHT - 120},
-            {.x= 100,.y=WINDOW_HEIGHT - 120},{.x=100,.y= WINDOW_HEIGHT - 140},
-            {.x= 100,.y=WINDOW_HEIGHT - 140},{.x=10, .y= WINDOW_HEIGHT - 140},
-            {.x= 10 ,.y=WINDOW_HEIGHT - 140},{.x=10, .y= WINDOW_HEIGHT - 10}
-        }
-    }
-};
-
-    // Initialization
-    //--------------------------------------------------------------------------------------
-     int screenWidth = WINDOW_WIDTH;
+    { 10 ,flip_y(10),600,flip_y(10)},
+    {600,flip_y( 10), 600, flip_y( 100 )},
+    {600,flip_y( 100), 60, flip_y( 100 )},
+    {60 ,flip_y( 100), 60, flip_y( 600 )},
+    {60 ,flip_y( 600),600, flip_y( 600 )},
+    {600,flip_y( 600),600, flip_y( 700 )},
+    {600,flip_y( 700),10,  flip_y( 700 )},
+    {10 ,flip_y( 700),10,  flip_y( 10 )} 
+}; 
+std::vector<segment> walls= 
+{  
+    
+       { {.x = 10 ,.y = flip_y(10)},{  600,flip_y(10)} },
+       { {.x = 600,.y = flip_y( 10) },{  600, flip_y( 100 )} },
+       { {.x = 600,.y = flip_y( 100)},{ 60, flip_y( 100 )}   },
+       { {.x = 60 ,.y = flip_y( 100)},{ 60, flip_y( 600 )}   },
+       { {.x = 60 ,.y = flip_y( 600)},{ 600, flip_y( 600 )}  },
+       { {.x = 600,.y = flip_y( 600)},{ 600, flip_y( 700 )}  },
+       { {.x = 600,.y = flip_y( 700)},{ 10,  flip_y( 700 )}  },
+       { {.x = 10 ,.y = flip_y( 700)},{ 10,  flip_y( 10  )} }
+    
+ 
+}; 
+ 
+   // Initialization 
+ //--------------------------------------------------------------------------------------
+      int screenWidth = WINDOW_WIDTH;
      int screenHeight = WINDOW_HEIGHT;
 
     InitWindow(screenWidth, screenHeight, "SnAkE");
@@ -134,7 +134,7 @@ std::vector<segment> walls={
     Shader cs_shader = {.id = compiled_raycast2d_compute_shader};
 
      int teinte_Loc = rlGetLocationUniform(compute_shader_program,"teinte");
-     int mouseposition_Loc = rlGetLocationUniform(compute_shader_program,"mouse_position");
+     int world2screen_matrix_Loc = rlGetLocationUniform(compute_shader_program,"world2screen_matrix");
 
     
     UnloadFileText(compute_shader_raycast2d_code);
@@ -157,28 +157,10 @@ std::vector<segment> walls={
     Shader render_shader =  LoadShader(NULL, "render.fs");
     int texLoc = GetShaderLocation(render_shader, "screen_texture");
 
-    
-    /*
-    BeginTextureMode(target);
-    for (auto wall = walls.begin();wall != walls.end();wall++)
-    DrawLineStrip(wall->points.data(),wall->points.size(),BLACK);
-    EndTextureMode();
-    BeginDrawing();
-
-        // NOTE: Render texture must be y-flipped due to default OpenGL coordinates (left-bottom)
-        DrawTextureRec(target.texture, (Rectangle) { 0, 0, (float)target.texture.width, (float)-target.texture.height }, (Vector2) { 0, 0 }, WHITE);
-    EndDrawing();
-
-    Image c = LoadImageFromTexture(target.texture);
-    
-    ExportImage(c,"toto.png");
-
-    */
-
 	fruits = {{10,10,30},{30,50,20},{100,150,10},{180,150,30}};
 
 
-    float speed = 1;
+    float speed = 0.5;
 
     double currentTime = GetTime();
     double previousTime = currentTime;
@@ -194,7 +176,7 @@ std::vector<segment> walls={
     Vector2 p;
     the_snake.initialize(p = {(float)GetScreenWidth()/2, (float)GetScreenHeight()/2});
 
-    the_snake.speed = {speed,speed};
+    the_snake.speed = {speed,};
     int zoomMode = 0;   // 0-Mouse Wheel, 1-Mouse Move
     double dangle = 0;
 
@@ -208,9 +190,18 @@ std::vector<segment> walls={
 
     bool keyLeftPressed = false;
     bool keyRightPressed = false;
+
+
+    Matrix world2screen_matrix ;
+    float world2screen[6];
     // Main game loop
     while (!WindowShouldClose())        // Detect window close button or ESC key
     {
+        camera.target = the_snake.current_position;
+        world2screen_matrix = GetCameraMatrix2D(camera);
+
+        world2screen[0]=world2screen_matrix.m0;world2screen[1]=world2screen_matrix.m4;world2screen[2]=world2screen_matrix.m12;
+        world2screen[3]=world2screen_matrix.m1;world2screen[4]=world2screen_matrix.m5;world2screen[5]=world2screen_matrix.m13;
 
     	keyRightPressed = IsKeyDown(KEY_RIGHT);
     	keyLeftPressed = IsKeyDown(KEY_LEFT);
@@ -329,12 +320,21 @@ std::vector<segment> walls={
                 for ( auto it = fruits.begin();it != fruits.end();it++){
                 	DrawCircle(it->p.x,it->p.y,it->radius,RED);
                 }
+
+
+                //draw walls
+                for ( auto iii = walls.begin();iii != walls.end();iii++)
+                {
+                    DrawLineStrip(iii->data(),iii->size(),MAGENTA);
+                }
             EndMode2D();
 
             // Draw mouse reference
             //Vector2 mousePos = GetWorldToScreen2D(GetMousePosition(), camera)
             DrawCircleV(GetMousePosition(), 4, DARKGRAY);
-            DrawTextEx(GetFontDefault(), TextFormat("[%i, %i]", GetMouseX(), GetMouseY()),
+            Vector2 mouse_position = GetMousePosition();
+            Vector2 world_mouse_position = GetScreenToWorld2D(mouse_position,camera);
+            DrawTextEx(GetFontDefault(), TextFormat("[%i, %i] => [%i, %i]",(int)world_mouse_position.x,(int)world_mouse_position.y, (int)mouse_position.x, (int)mouse_position.y),
                 Vector2Add(GetMousePosition(), (Vector2){ -44, -24 }), 20, 2, BLACK);
 
             sprintf(fpsStr, " fps %i ",GetFPS() );
@@ -342,24 +342,20 @@ std::vector<segment> walls={
             DrawText(fpsStr, 20, 20, 20, DARKGRAY);
         EndTextureMode();
         float teinte[4]={1,1,1,segments.size()};
-        Vector2 mouse = GetMousePosition();
-        float mouse_and_window_center_position[4] = {mouse.x,mouse.y,the_snake.current_position.x,the_snake.current_position.y};
+
         // we use compute shader to render to this texture
-        uint sss = rlGetShaderBufferSize(ssboWalls);
-        float ttt[segments.size()*4]={0};
-        rlReadShaderBuffer(ssboWalls, (void *) ttt, segments.size()*4*sizeof(float), 0);
-            rlEnableShader(compute_shader_program);
+       // uint sss = rlGetShaderBufferSize(ssboWalls);
+       // float ttt[segments.size()*4]={0};
+       // rlReadShaderBuffer(ssboWalls, (void *) ttt, segments.size()*4*sizeof(float), 0);
+        rlEnableShader(compute_shader_program);
 
            // int mouse_position_Loc = rlGetLocationUniform(compiled_raycast2d_compute_shader,"mouse_position");
             rlBindShaderBuffer(ssboWalls, 0);
             rlSetUniform(3,(void *)teinte,RL_SHADER_UNIFORM_VEC4,1);
-            rlSetUniform(4,(void *)mouse_and_window_center_position,RL_SHADER_UNIFORM_VEC4,1);
+            rlSetUniform(4,(void *)world2screen,RL_SHADER_UNIFORM_FLOAT,6);
 
             int output_image_location= rlGetLocationUniform(compute_shader_program,"u_output_image");
             int input_image_location= rlGetLocationUniform(compute_shader_program,"u_input_image");
-
-            float time = 1;
-            rlSetUniform(5,(void *)&time,RL_SHADER_UNIFORM_FLOAT,1);
 
             rlActiveTextureSlot(input_image_location);
             rlEnableTexture(input_image_location);
@@ -397,7 +393,7 @@ std::vector<segment> walls={
         EndDrawing();
 
         //std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        camera.target = the_snake.current_position;
+
         //----------------------------------------------------------------------------------
     }
 

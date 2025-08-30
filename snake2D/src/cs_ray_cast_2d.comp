@@ -16,7 +16,7 @@ layout(std430, binding = 0 ) buffer segments_layout {
  layout( binding = 1,rgba8) uniform coherent image2D u_output_image;
 
 layout(location = 3) uniform vec4 teinte;
-layout(location = 4) uniform vec4 mouse_and_window_center_position;
+layout(location = 4) uniform float world2screen_matrix[6]; // 6 floats pour representer la matrice de transformatio world vers screen
 
 
 
@@ -28,12 +28,20 @@ float cross_product2d(vec2 v1, vec2 v2)
 /*
 	local_position is screen coordinate
 */
-vec2 local2world(vec2 local_position){
 
-	ivec2 size = imageSize(u_input_image);
-	vec2 world_window_center = vec2(mouse_and_window_center_position.zw);
-	return vec2(local_position.x+world_window_center.x-size.x/2,local_position.y+world_window_center.y-size.y/2);
+
+vec2 world2screen(vec2 world_position){
+
+ivec2 size = imageSize(u_input_image);
+
+	vec2 world2screen_pixel = vec2(
+		world2screen_matrix[0]*world_position.x + world2screen_matrix[1]*world_position.y + world2screen_matrix[2],
+		world2screen_matrix[3]*world_position.x + world2screen_matrix[4]*world_position.y + world2screen_matrix[5]
+		);
+
+	return vec2(world2screen_pixel.x,size.y - world2screen_pixel.y);
 }
+
 vec2 vector2(vec2 p0, vec2 p1)
 {
 	vec2 v;
@@ -86,20 +94,19 @@ bool ray_cast_2d(vec2 fpos)
 {
 
 	int number_of_segments = int(teinte.w);
-	
+	ivec2 size = imageSize(u_input_image);
 	Segment2d ray;
-	vec2 mouse_position = mouse_and_window_center_position.zw;
-	ray.start =local2world(mouse_position) ;
+	vec2 screen_center_position = vec2(size.x/2,size.y/2);
+	ray.start = screen_center_position;
 	ray.end = fpos;
-	
 
 	Segment2d segment ;
 	for (int i = 0; i <number_of_segments;i++)
 	{
 		
 
-		segment.start = segfloat4[i].xy;
-		segment.end = segfloat4[i].zw;
+		segment.start = world2screen( vec2(segfloat4[i].x, segfloat4[i].y) );
+		segment.end = world2screen( vec2(segfloat4[i].z, segfloat4[i].w) );
 		
 		int collision_result = collision_segment_segment(ray,segment);
 		if(  collision_result != -1 )
@@ -127,26 +134,20 @@ layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
 void main()
 {
 	ivec2 size = imageSize(u_input_image);
-    ivec2 pixel_coord = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 pixel_screen_coord = ivec2( gl_GlobalInvocationID.x,  gl_GlobalInvocationID.y);
 
-	vec2 world_window_center = vec2(mouse_and_window_center_position.zw);
-	vec2 pixel_world_coord = vec2(pixel_coord.x+world_window_center.x-size.x/2,pixel_coord.y+world_window_center.y-size.y/2);
+    vec4 inPixel = imageLoad(u_input_image, pixel_screen_coord);
 
-    vec4 inPixel = imageLoad(u_input_image, pixel_coord);
+	float d = length( size.xy/2 - pixel_screen_coord );
 
-	float d = length( mouse_and_window_center_position.zw - pixel_world_coord );
-
-	vec4 light = 1./(1 + d*d/(450*450)) *vec4(teinte.xyz,1); 
-
-
-
+	vec4 light = 1./(1 + 2 * d*d/(450*450)) *vec4(teinte.xyz,1); 
 
 	vec4 color_collision;
-	bool ray_collides = ray_cast_2d(pixel_world_coord);
+	bool ray_collides = ray_cast_2d(pixel_screen_coord);
 
 	if ( ray_collides )
 	{
-		color_collision = inPixel *vec4(0.0,0.0,0.0,1);
+		color_collision = inPixel *vec4(0.95,0.95,0.95,0.95);
 	}
 	else{
 		color_collision = inPixel;
@@ -156,11 +157,13 @@ void main()
 	int number_of_polygons = int(teinte.w);
 	for (int i = 0; i < number_of_polygons;i++){
 		vec4 segment = segfloat4[i];
-		polygons_color += DrawLine(pixel_world_coord,segment.xy,segment.zw,5,vec4(1,1,0,1)) ;
+		// on exprime les coordonnees des points du segment dans le system de coordonnees de l'ecran
+		//
+		vec2 a = world2screen( vec2( segment.x, segment.y ) );
+		vec2 b = world2screen( vec2( segment.z, segment.w ) );
+		polygons_color += DrawLine(pixel_screen_coord,a,b,5,vec4(1,1,0.3,1)) ;
 	}
 
 	vec4 final_pixel = 0.5 *( color_collision  + polygons_color* (1.0 - float(ray_collides)) )* light;
-	imageStore(u_output_image, pixel_coord, final_pixel);
-	//float dummy = time + 5;
-	//imageStore(u_output_image, pixel_coord,vec4(1,1,0,1));
+	imageStore(u_output_image, pixel_screen_coord, final_pixel);
 }

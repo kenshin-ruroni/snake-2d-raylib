@@ -115,7 +115,7 @@ struct Snake {
 
 	Vector2 t[3]; // head vertices
 	Vector2 head_origin;
-	float angle = 45;
+	float angle = 0;
 	float d ,l;
 	bool collided = false;
 	size_t collision_index = -1;
